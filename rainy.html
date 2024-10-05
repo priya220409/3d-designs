@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./asset/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">                     
+    <title>Three.js Saturn with Rings, Moons, and Stars</title>    
+</head>
+<body>
+    <h1>space</h1>
+  
+        <div class="dropdown">
+            <button class="dropbtn">Menu</button>
+            <div class="dropdown-content">
+                <li><a href="home1.html"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#"><i class="fas fa-cogs"></i> Services</a></li>
+                <li><a href="#"><i class="fas fa-images"></i> Planets</a></li>
+                <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
+            </div>
+        </div>
+   
+
+    <div class="container-fluid text-center">
+        
+        
+        <!-- Add audio element -->
+        <audio id="Sound" src="./asset/audio/space-sound-mid-109575.mp3"></audio>
+        
+        <button id="playButton" class="btn btn-primary">Let's explore space <i class="fa-solid fa-play"></i></button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        const sound = document.getElementById('Sound');
+        const playButton = document.getElementById('playButton');
+
+        // Add event listener to play the sound when the button is clicked
+        playButton.addEventListener('click', function() {
+            if (sound.paused) {
+                sound.play();
+                playButton.innerHTML = 'space <i class="fa-solid fa-arrow-right"></i>';
+            } else {
+                sound.pause();
+                playButton.innerHTML = 'space <i class="fa-solid fa-arrow-right"></i>';
+            }
+        });
+
+        // Set up the scene, camera, and renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Set camera position
+        camera.position.z = 15;
+
+        // Saturn setup
+        const textureLoader = new THREE.TextureLoader();
+        const saturnMaterial = new THREE.MeshStandardMaterial({color: 0xFFD700});
+        
+        const saturnGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const saturn = new THREE.Mesh(saturnGeometry, saturnMaterial);
+        saturn.rotation.x = Math.PI / 5;
+
+        const ringGeometry = new THREE.RingGeometry(2.5, 4.5, 64);
+        const ringMaterial = new THREE.MeshBasicMaterial({
+            color: 0xc2b280,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.7
+        });
+        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+        ring.rotation.x = Math.PI / 2;
+        saturn.add(ring);
+        scene.add(saturn);
+
+        // Create Earth
+        const earthGeometry = new THREE.SphereGeometry(1, 32, 32);
+        const texture = new THREE.TextureLoader().load("textures/atmosphere_baseColor.png"); // Fixed the path
+        const earthMaterial = new THREE.MeshStandardMaterial({
+            map: texture,
+        });
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        earth.position.set(5, 5, 0);
+        earth.rotation.x = Math.PI / 2; // Corrected rotation
+        scene.add(earth);  
+
+        // Create moons for Saturn
+        const moonGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const moonMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
+        const moon1 = new THREE.Mesh(moonGeometry, moonMaterial);
+        moon1.position.set(3, 3, 0);
+        saturn.add(moon1);
+        
+        const moon2 = new THREE.Mesh(moonGeometry, moonMaterial);
+        moon2.position.set(-3, -3, 0);
+        saturn.add(moon2);
+
+        // Create stars
+        let stars;
+        function createStars() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starCount = 10000;
+            const starVertices = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount; i++) {
+                starVertices[i * 3] = Math.random() * 600 - 300;
+                starVertices[i * 3 + 1] = Math.random() * 600 - 300;
+                starVertices[i * 3 + 2] = Math.random() * 600 - 300;
+            }
+
+            starGeometry.setAttribute('position', new THREE.BufferAttribute(starVertices, 3));
+
+            const starMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5
+            });
+
+            stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        createStars();
+
+        // Orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Lighting
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+
+        // Animate scene
+        function animate() {
+            requestAnimationFrame(animate);
+        
+            saturn.rotation.y += 0.009;
+            ring.rotation.z += 0.009;
+
+            // Rotate stars (background)
+            stars.rotation.y += 0.0009;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Adjust to window resize
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+    </script>
+</body>
+</html>
